@@ -1,0 +1,219 @@
+<main class="profile-page">
+  <section class="section-profile-cover section-shaped my-0">
+    <!-- Circles background -->
+    <div class="shape shape-style-1 shape-primary alpha-4">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <!-- SVG separator -->
+    <div class="separator separator-bottom separator-skew">
+      <svg x="0" y="0" viewBox="0 0 2560 100" preserveAspectRatio="none" version="1.1"
+        xmlns="http://www.w3.org/2000/svg">
+        <polygon class="fill-white" points="2560 0 2560 100 0 100"></polygon>
+      </svg>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="card card-profile shadow mt--300">
+        <div class="px-4">
+          <div class="row justify-content-center">
+            <div class="col-lg-3 order-lg-2">
+              <div class="card-profile-image">
+                <a href="javascript:void(0)">
+                  <img src="./assets/img/theme/team-4-800x800.jpg" class="rounded-circle">
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-4 order-lg-3 text-lg-right align-self-lg-center">
+              <div class="card-profile-actions py-4 mt-lg-0">
+                <a href="javascript:void(0)" class="btn btn-sm btn-info mr-4">Connect</a>
+                <a href="javascript:void(0)" class="btn btn-sm btn-default float-right">Message</a>
+              </div>
+            </div>
+            <div class="col-lg-4 order-lg-1">
+              <div class="card-profile-stats d-flex justify-content-center">
+                <div>
+                  <span class="heading">22</span>
+                  <span class="description">Friends</span>
+                </div>
+                <div>
+                  <span class="heading">10</span>
+                  <span class="description">Photos</span>
+                </div>
+                <div>
+                  <span class="heading">89</span>
+                  <span class="description">Comments</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-center mt-5">
+            <h3>Jessica Jones
+              <span class="font-weight-light">, 27</span>
+            </h3>
+            <div class="h6 font-weight-300"><i class="ni location_pin mr-2"></i>Bucharest, Romania</div>
+            <div class="h6 mt-4"><i class="ni business_briefcase-24 mr-2"></i>Solution Manager - Creative Tim Officer
+            </div>
+            <div><i class="ni education_hat mr-2"></i>University of Computer Science</div>
+          </div>
+          <div class="mt-5 py-5 border-top text-center">
+            <div class="row justify-content-center">
+              <div class="col-lg-9">
+                <p>An artist of considerable range, Ryan — the name taken by Melbourne-raised, Brooklyn-based Nick
+                  Murphy — writes, performs and records all of his own music, giving it a warm, intimate feel with a
+                  solid groove structure. An artist of considerable range.</p>
+                <a href="javascript:void(0)">Show more</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+      <h1 class="mb-4">Your Profile</h1>
+
+      <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+      <div *ngIf="!isLoading && user">
+        <div class="row">
+          <div class="col-md-6">
+            <!-- Profile Information Card -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5 class="mb-0">Profile Information</h5>
+              </div>
+              <div class="card-body">
+                <div *ngIf="success" class="alert alert-success">
+                  {{ success }}
+                </div>
+
+                <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+                  <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" class="form-control" formControlName="username"
+                      [ngClass]="{'is-invalid': profileForm.get('username')?.invalid && profileForm.get('username')?.touched}">
+                    <div *ngIf="profileForm.get('username')?.invalid && profileForm.get('username')?.touched"
+                      class="invalid-feedback">
+                      <div *ngIf="profileForm.get('username')?.errors?.['required']">Username is required</div>
+                      <div *ngIf="profileForm.get('username')?.errors?.['minlength']">Username must be at least 3
+                        characters</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" formControlName="email"
+                      [ngClass]="{'is-invalid': profileForm.get('email')?.invalid && profileForm.get('email')?.touched}">
+                    <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched"
+                      class="invalid-feedback">
+                      <div *ngIf="profileForm.get('email')?.errors?.['required']">Email is required</div>
+                      <div *ngIf="profileForm.get('email')?.errors?.['email']">Email must be valid</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" [value]="user.role" disabled>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Member Since</label>
+                    <input type="text" class="form-control" [value]="user.createdAt | date:'mediumDate'" disabled>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isSaving">
+                    <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2" role="status"
+                      aria-hidden="true"></span>
+                    Save Changes
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <!-- Change Password Card -->
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Change Password</h5>
+              </div>
+              <div class="card-body">
+                <div *ngIf="passwordSuccess" class="alert alert-success">
+                  {{ passwordSuccess }}
+                </div>
+
+                <div *ngIf="passwordError" class="alert alert-danger">
+                  {{ passwordError }}
+                </div>
+
+                <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+                  <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Current Password</label>
+                    <input type="password" id="currentPassword" class="form-control" formControlName="currentPassword"
+                      [ngClass]="{'is-invalid': passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched}">
+                    <div
+                      *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched"
+                      class="invalid-feedback">
+                      <div *ngIf="passwordForm.get('currentPassword')?.errors?.['required']">Current password is
+                        required</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="newPassword" class="form-label">New Password</label>
+                    <input type="password" id="newPassword" class="form-control" formControlName="newPassword"
+                      [ngClass]="{'is-invalid': passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched}">
+                    <div *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched"
+                      class="invalid-feedback">
+                      <div *ngIf="passwordForm.get('newPassword')?.errors?.['required']">New password is required</div>
+                      <div *ngIf="passwordForm.get('newPassword')?.errors?.['minlength']">New password must be at least
+                        6 characters</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-control" formControlName="confirmPassword"
+                      [ngClass]="{'is-invalid': (passwordForm.get('confirmPassword')?.invalid || passwordForm.hasError('passwordMismatch')) && passwordForm.get('confirmPassword')?.touched}">
+                    <div
+                      *ngIf="(passwordForm.get('confirmPassword')?.invalid || passwordForm.hasError('passwordMismatch')) && passwordForm.get('confirmPassword')?.touched"
+                      class="invalid-feedback">
+                      <div *ngIf="passwordForm.get('confirmPassword')?.errors?.['required']">Confirm password is
+                        required</div>
+                      <div *ngIf="passwordForm.hasError('passwordMismatch')">Passwords do not match</div>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || isChangingPassword">
+                    <span *ngIf="isChangingPassword" class="spinner-border spinner-border-sm me-2" role="status"
+                      aria-hidden="true"></span>
+                    Change Password
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

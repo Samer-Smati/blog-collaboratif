@@ -1,0 +1,50 @@
+<div class="search-container mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Search Articles</h5>
+
+            <!-- Search input -->
+            <div class="input-group mb-3">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Search by title or content"
+                    [(ngModel)]="searchTerm" (input)="onSearch(searchTerm)">
+                <button class="btn btn-outline-secondary" type="button" (click)="clearSearch()"
+                    *ngIf="searchTerm || selectedTags.length > 0">
+                    Clear
+                </button>
+            </div>
+
+            <!-- Tags filter -->
+            <div class="mb-3">
+                <h6 class="mb-2">Filter by Tags</h6>
+                <div class="tags-container">
+                    <span *ngFor="let tag of tags" class="tag" [class.selected]="selectedTags.includes(tag)"
+                        (click)="toggleTag(tag)">
+                        {{ tag }}
+                    </span>
+                    <span *ngIf="tags.length === 0" class="text-muted">No tags available</span>
+                </div>
+            </div>
+
+            <!-- Active filters display -->
+            <div *ngIf="selectedTags.length > 0" class="active-filters mt-2">
+                <small class="text-muted d-block mb-1">Active filters:</small>
+                <div class="selected-tags">
+                    <span *ngFor="let tag of selectedTags" class="selected-tag">
+                        {{ tag }}
+                        <i class="bi bi-x" (click)="toggleTag(tag)"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div *ngIf="isLoading" class="text-center mt-2">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

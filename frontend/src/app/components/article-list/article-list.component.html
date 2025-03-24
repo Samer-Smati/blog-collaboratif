@@ -1,0 +1,135 @@
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Articles</h1>
+
+    <div *ngIf="authService.isAuthenticated() && ['admin', 'editor', 'writer'].includes(authService.getUserRole())">
+      <a routerLink="/articles/create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Write Article
+      </a>
+    </div>
+  </div>
+
+  <!-- Search and Filter component -->
+  <app-article-search (searchResults)="handleSearchResults($event)" (resetSearch)="resetFilter()"></app-article-search>
+
+  <!-- Active tag filter indicator -->
+  <div *ngIf="selectedTag" class="mb-3">
+    <span class="me-2">Filtered by tag:</span>
+    <span class="badge bg-primary me-1">{{ selectedTag }}</span>
+    <button class="btn btn-sm btn-link text-decoration-none p-0" (click)="resetFilter()">
+      Clear filter
+    </button>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="alert alert-danger my-3">
+    {{ error }}
+  </div>
+
+  <!-- No articles message -->
+  <div *ngIf="!isLoading && getDisplayedArticles().length === 0" class="text-center my-5">
+    <i class="bi bi-journal-text display-4 text-muted mb-3"></i>
+    <h5 class="text-muted">No articles found</h5>
+    <p class="text-muted">
+      {{ isFiltering ? 'Try a different search or filter' : 'Be the first to write an article!' }}
+    </p>
+  </div>
+
+  <!-- Articles list -->
+  <div *ngIf="!isLoading && getDisplayedArticles().length > 0">
+    <div class="mb-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted">Showing {{ ((currentPage - 1) * pageSize) + 1 }} -
+            {{ Math.min(currentPage * pageSize, totalArticles) }} of {{ totalArticles }} articles</span>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            Sort by
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="changeSort('createdAt')">
+                <i class="bi me-2" [ngClass]="getSortIcon('createdAt')"></i>Date
+              </a></li>
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="changeSort('title')">
+                <i class="bi me-2" [ngClass]="getSortIcon('title')"></i>Title
+              </a></li>
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="changeSort('viewCount')">
+                <i class="bi me-2" [ngClass]="getSortIcon('viewCount')"></i>Views
+              </a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div *ngFor="let article of getDisplayedArticles(); trackBy: trackByArticleId" class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-2">
+              <a [routerLink]="['/articles', article._id]" class="text-decoration-none stretched-link">{{ article.title
+                }}</a>
+            </h5>
+
+            <div class="d-flex align-items-center mb-2 text-muted">
+              <span class="me-3">
+                <i class="bi bi-person me-1"></i>
+                {{ article.author?.username }}
+              </span>
+              <span class="me-3">
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ article.createdAt | date:'mediumDate' }}
+              </span>
+              <span *ngIf="article.viewCount !== undefined">
+                <i class="bi bi-eye me-1"></i>
+                {{ article.viewCount }}
+              </span>
+            </div>
+
+            <p class="card-text">{{ article.content && article.content.length > 200 ? (article.content | slice:0:200) +
+              '...' : article.content }}</p>
+
+            <div class="mt-auto">
+              <div class="mt-2">
+                <span *ngFor="let tag of article.tags" class="badge bg-light text-dark me-1 mb-1"
+                  (click)="filterByTag(tag); $event.stopPropagation()" style="cursor: pointer;">
+                  {{ tag }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav *ngIf="totalPages > 1" aria-label="Article pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a class="page-link" href="javascript:void(0)" (click)="changePage(currentPage - 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+
+        <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index"
+          [class.active]="currentPage === i + 1">
+          <a class="page-link" href="javascript:void(0)" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+        </li>
+
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a class="page-link" href="javascript:void(0)" (click)="changePage(currentPage + 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>

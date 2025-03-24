@@ -1,0 +1,67 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" [routerLink]="['/']">Blog Platform</a>
+
+    <button class="navbar-toggler" type="button" (click)="toggleNav()" [attr.aria-expanded]="!isNavCollapsed"
+      aria-controls="navbarNav" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" [class.show]="!isNavCollapsed" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+            [routerLink]="['/articles']">Articles</a>
+        </li>
+
+        <!-- Show these links only to authenticated users with specific roles -->
+        <ng-container *ngIf="isAuthenticated">
+          <li class="nav-item" *ngIf="['admin', 'editor', 'writer'].includes(userRole)">
+            <a class="nav-link" routerLinkActive="active" [routerLink]="['/articles/create']">Create
+              Article</a>
+          </li>
+
+          <li class="nav-item" *ngIf="['admin', 'editor'].includes(userRole)">
+            <a class="nav-link" routerLinkActive="active" [routerLink]="['/dashboard']">Dashboard</a>
+          </li>
+
+          <li class="nav-item" *ngIf="userRole === 'admin'">
+            <a class="nav-link" routerLinkActive="active" [routerLink]="['/users']">User Management</a>
+          </li>
+        </ng-container>
+      </ul>
+
+      <ul class="navbar-nav">
+        <ng-container *ngIf="!isAuthenticated">
+          <li class="nav-item">
+            <a class="nav-link" routerLinkActive="active" [routerLink]="['/login']">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLinkActive="active" [routerLink]="['/register']">Register</a>
+          </li>
+        </ng-container>
+
+        <ng-container *ngIf="isAuthenticated">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              {{ username }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" [routerLink]="['/profile']">My Profile</a></li>
+              <li *ngIf="['admin', 'editor'].includes(userRole)">
+                <a class="dropdown-item" [routerLink]="['/dashboard']">Dashboard</a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="logout()">Logout</a></li>
+            </ul>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<app-notification-dropdown *ngIf="authService.isAuthenticated()"></app-notification-dropdown>

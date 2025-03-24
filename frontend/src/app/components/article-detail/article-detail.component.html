@@ -1,0 +1,149 @@
+<div class="container mt-4">
+  <div *ngIf="isLoading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!isLoading && article">
+    <div class="row">
+      <div class="col-md-10 mx-auto">
+        <!-- Article Header -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span *ngFor="let tag of article.tags" class="badge bg-secondary me-1">
+                {{ tag }}
+              </span>
+            </div>
+            <small class="text-muted">
+              {{ article.createdAt | date:'medium' }}
+            </small>
+          </div>
+          <h1 class="mb-3">{{ article.title }}</h1>
+          <h6 class="text-muted">By {{ article.author?.username || 'Unknown' }}</h6>
+        </div>
+
+        <!-- Article Actions for Authors/Admins -->
+        <div *ngIf="canEdit() || canDelete()" class="mb-4">
+          <div class="btn-group" role="group">
+            <a *ngIf="canEdit()" [routerLink]="['/articles', article._id, 'edit']" class="btn btn-outline-primary">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+            <button *ngIf="canDelete()" class="btn btn-outline-danger" (click)="deleteArticle()">
+              <i class="bi bi-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Article Content -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="article-content">
+              {{ article.content }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Comments ({{ article.comments?.length || 0 }})</h3>
+          </div>
+          <div class="card-body">
+            <!-- Comment Form -->
+            <div *ngIf="authService.isAuthenticated()" class="mb-4">
+              <form [formGroup]="commentForm" (ngSubmit)="onSubmitComment()">
+                <div class="mb-3">
+                  <textarea class="form-control" formControlName="content" rows="3" placeholder="Write a comment..."
+                    [ngClass]="{'is-invalid': commentForm.get('content')?.invalid && commentForm.get('content')?.touched}"></textarea>
+                  <div *ngIf="commentForm.get('content')?.invalid && commentForm.get('content')?.touched"
+                    class="invalid-feedback">
+                    <div *ngIf="commentForm.get('content')?.errors?.['required']">Comment content is required</div>
+                    <div *ngIf="commentForm.get('content')?.errors?.['minlength']">Comment must be at least 3 characters
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                  <button type="submit" class="btn btn-primary" [disabled]="commentForm.invalid || isSubmittingComment">
+                    <span *ngIf="isSubmittingComment" class="spinner-border spinner-border-sm me-2" role="status"
+                      aria-hidden="true"></span>
+                    Post Comment
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div *ngIf="!authService.isAuthenticated()" class="alert alert-info">
+              <a [routerLink]="['/login']">Sign in</a> to leave a comment.
+            </div>
+
+            <!-- Comments List -->
+            <div *ngIf="article.comments?.length === 0" class="text-center text-muted">
+              No comments yet. Be the first to comment!
+            </div>
+
+            <div *ngFor="let comment of article.comments" class="comment mb-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="comment-content">
+                    <strong>{{ comment.author?.username || 'Unknown' }}</strong>
+                    <small class="text-muted ms-2">{{ comment.createdAt | date:'medium' }}</small>
+                    <p class="mt-2 mb-1">{{ comment.content }}</p>
+                  </div>
+
+                  <!-- Reply button -->
+                  <button *ngIf="authService.isAuthenticated()" class="btn btn-sm btn-link"
+                    (click)="replyToComment(comment._id)">
+                    Reply
+                  </button>
+
+                  <!-- Reply form -->
+                  <div *ngIf="replyingTo === comment._id" class="mt-3">
+                    <form [formGroup]="replyForm" (ngSubmit)="onSubmitReply()">
+                      <div class="mb-3">
+                        <textarea class="form-control" formControlName="content" rows="2" placeholder="Write a reply..."
+                          [ngClass]="{'is-invalid': replyForm.get('content')?.invalid && replyForm.get('content')?.touched}"></textarea>
+                        <div *ngIf="replyForm.get('content')?.invalid && replyForm.get('content')?.touched"
+                          class="invalid-feedback">
+                          <div *ngIf="replyForm.get('content')?.errors?.['required']">Reply content is required</div>
+                          <div *ngIf="replyForm.get('content')?.errors?.['minlength']">Reply must be at least 3
+                            characters</div>
+                        </div>
+                      </div>
+                      <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" (click)="cancelReply()">
+                          Cancel
+                        </button>
+                        <button type="submit" class="btn btn-sm btn-primary" [disabled]="replyForm.invalid">
+                          Post Reply
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <!-- Replies -->
+                  <div *ngIf="comment.replies && comment.replies.length > 0" class="replies mt-3">
+                    <div *ngFor="let reply of comment.replies" class="reply ms-4 mt-2">
+                      <div class="card">
+                        <div class="card-body py-2">
+                          <strong>{{ reply.author?.username || 'Unknown' }}</strong>
+                          <small class="text-muted ms-2">{{ reply.createdAt | date:'medium' }}</small>
+                          <p class="mt-1 mb-0">{{ reply.content }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+.search-container {
+  .card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background-color: #f0f0f0;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #e0e0e0;
+      }
+
+      &.selected {
+        background-color: #007bff;
+        color: white;
+
+        &:hover {
+          background-color: #0069d9;
+        }
+      }
+    }
+  }
+
+  .active-filters {
+    .selected-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .selected-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 20px;
+        font-size: 0.875rem;
+
+        i {
+          cursor: pointer;
+
+          &:hover {
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+  }
+}

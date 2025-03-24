@@ -1,0 +1,145 @@
+.notification-dropdown {
+  position: relative;
+
+  .notification-btn {
+    color: #495057;
+    background: none;
+    border: none;
+    padding: 8px;
+    font-size: 1.25rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+
+    &:hover,
+    &:focus {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.25rem 0.45rem;
+    }
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+    min-width: 320px;
+    padding: 0;
+    margin-top: 0.5rem;
+    border-radius: 0.35rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+
+    &.show {
+      display: block;
+    }
+
+    .dropdown-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e9ecef;
+
+      h6 {
+        font-weight: 600;
+      }
+    }
+
+    .notifications-list {
+      max-height: 350px;
+      overflow-y: auto;
+
+      .notification-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f8f9fa;
+        text-decoration: none;
+        color: #212529;
+        position: relative;
+
+        &:hover {
+          background-color: #f8f9fa;
+        }
+
+        &.unread {
+          background-color: #f0f7ff;
+
+          &:hover {
+            background-color: #e6f2ff;
+          }
+
+          .notification-message {
+            font-weight: 500;
+          }
+        }
+
+        .notification-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #e9ecef;
+          margin-right: 0.75rem;
+          flex-shrink: 0;
+
+          i {
+            font-size: 1.25rem;
+            color: #6c757d;
+          }
+        }
+
+        .notification-content {
+          flex: 1;
+          min-width: 0;
+
+          .notification-message {
+            margin-bottom: 0.25rem;
+            color: #212529;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+          }
+
+          .notification-time {
+            color: #6c757d;
+          }
+        }
+
+        .notification-delete {
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+          padding: 0.25rem;
+          font-size: 0.75rem;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        &:hover .notification-delete {
+          opacity: 0.5;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+    }
+
+    .view-all {
+      padding: 0.75rem;
+      font-weight: 500;
+      color: #007bff;
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+    }
+  }
+}
