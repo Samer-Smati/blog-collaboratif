@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArticleService } from '../../core/services/article.service';
@@ -14,42 +14,24 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 export class ArticleSearchComponent implements OnInit {
   @Output() searchResults = new EventEmitter<any>();
   @Output() resetSearch = new EventEmitter<void>();
+  @Input() tags: string[] = [];
 
   searchTerm = '';
   searchTerms = new Subject<string>();
-  tags: string[] = [];
   selectedTags: string[] = [];
   isLoading = false;
 
   constructor(private articleService: ArticleService) {}
 
   ngOnInit(): void {
-    this.loadTags();
-
     // Set up search with debounce
     this.searchTerms
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((term) => {
+        console.log('term ===>', term);
         this.searchTerm = term;
         this.search();
       });
-  }
-
-  loadTags(): void {
-    // Temporarily disable tag loading until backend is fixed
-    this.tags = []; // Just use an empty array for now
-
-    // Comment out the API call that's causing errors
-    /*
-    this.articleService.getAllTags().subscribe({
-      next: (tags) => {
-        this.tags = tags;
-      },
-      error: (err) => {
-        console.error('Error loading tags', err);
-      }
-    });
-    */
   }
 
   onSearch(term: string): void {

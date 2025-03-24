@@ -1,10 +1,11 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { RegisterUser, User, AuthResponse } from '../../models/user.model';
-import { isPlatformBrowser } from '@angular/common';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import { CookieService } from 'ngx-cookie-service';
+import { AuthResponse, RegisterUser, User } from '../../models/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,16 +19,16 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private router: Router
+    private router: Router,
+    private cookieService: CookieService
   ) {
     this.loadUserFromStorage();
   }
 
   private loadUserFromStorage() {
-    // Only run this in browser environments
     if (isPlatformBrowser(this.platformId)) {
-      const userJson = localStorage.getItem('user');
-      const tokenExpiration = localStorage.getItem('tokenExpiration');
+      const userJson = this.cookieService.get('user');
+      const tokenExpiration = this.cookieService.get('tokenExpiration');
 
       if (userJson && tokenExpiration) {
         const user = JSON.parse(userJson);
@@ -44,75 +45,65 @@ export class AuthService {
     }
   }
 
-  register(user: RegisterUser): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, user).pipe(
-      tap((response: AuthResponse) => {
-        this.setAuthData(response);
-      }),
-      catchError((error) => {
-        // Check for MongoDB duplicate key error
-        if (
-          error.error &&
-          error.error.message &&
-          error.error.message.includes('E11000 duplicate key error')
-        ) {
-          // Extract the duplicate field from the error message
-          if (error.error.message.includes('username')) {
-            return throwError(
-              () =>
-                new Error(
-                  'Username already exists. Please choose a different username.'
-                )
-            );
-          } else if (error.error.message.includes('email')) {
-            return throwError(
-              () =>
-                new Error(
-                  'Email address already in use. Please use a different email.'
-                )
-            );
-          }
-        }
-        return throwError(() => error);
-      })
-    );
+  getToken(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.cookieService.get('user')) {
+        const token = JSON.parse(this.cookieService.get('user')).accessToken;
+        return token || null;
+      }
+    }
+    return null;
   }
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    console.log('Making login request to:', `${this.apiUrl}/login`);
-    console.log('With payload:', { email, password });
+  private setAuthData(response: AuthResponse): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Store user data
+      response.user.accessToken = response.accessToken;
+      this.cookieService.set('user', JSON.stringify(response.user), {
+        path: '/',
+        expires: new Date(new Date().getTime() + 3600 * 1000), // 1 hour
+      });
 
-    return this.http
-      .post<AuthResponse>(`${this.apiUrl}/login`, { email, password })
-      .pipe(
-        tap((response: AuthResponse) => {
-          this.setAuthData(response);
-        }),
-        catchError((error) => {
-          if (error.error && error.error.message) {
-            return throwError(() => new Error(error.error.message));
-          }
-          return throwError(
-            () => new Error('Login failed. Please try again later.')
-          );
-        })
-      );
+      // Store access token
+      this.cookieService.set('accessToken', response.accessToken, {
+        path: '/',
+        expires: new Date(new Date().getTime() + 3600 * 1000), // 1 hour
+      });
+
+      // Store refresh token if available
+      if (response.refreshToken) {
+        this.cookieService.set('refreshToken', response.refreshToken, {
+          path: '/',
+          expires: new Date(new Date().getTime() + 7 * 24 * 3600 * 1000), // 7 days
+        });
+      }
+
+      // Update user subject
+      this.userSubject.next(response.user);
+
+      // Set auto logout
+      this.setAutoLogout(3600 * 1000); // 1 hour
+    }
   }
 
   logout(): void {
+    // For httpOnly cookies, we need to call the backend to clear them
+
+    // Clear any non-httpOnly cookies we might have set
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('tokenExpiration');
+      this.cookieService.delete('user', '/');
+      this.cookieService.delete('tokenExpiration', '/');
     }
     this.userSubject.next(null);
-    this.clearAuthTimer();
+
     this.router.navigate(['/login']);
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+
+    const user = this.userSubject.value;
+    return !!token && !!user;
   }
 
   get currentUser(): User | null {
@@ -120,14 +111,8 @@ export class AuthService {
   }
 
   getUserRole(): string {
-    return this.currentUser?.role || '';
-  }
-
-  getToken(): string | null {
-    if (isPlatformBrowser(this.platformId)) {
-      return localStorage.getItem('accessToken');
-    }
-    return null;
+    const user = this.userSubject.value;
+    return user?.role || '';
   }
 
   refreshToken(): Observable<string> {
@@ -135,52 +120,24 @@ export class AuthService {
       return throwError(() => new Error('Not in browser environment'));
     }
 
-    const refreshToken = localStorage.getItem('refreshToken');
-
-    if (!refreshToken) {
-      return throwError(() => new Error('No refresh token available'));
-    }
-
+    // With httpOnly cookies, we don't need to manually send the refresh token
+    // The browser will automatically include it in the request
     return this.http
-      .post<string>(`${this.apiUrl}/refresh-token`, { refreshToken })
+      .post<any>(`${this.apiUrl}/refresh-token`, {}, { withCredentials: true })
       .pipe(
-        tap((response: string) => {
-          // Update only the access token
-          localStorage.setItem('accessToken', response);
-
-          if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
-          }
-
-          const expiration = new Date(new Date().getTime() + 3600 * 1000); // 1 hour
-          localStorage.setItem('tokenExpiration', expiration.toISOString());
-
-          this.setAutoLogout(3600 * 1000);
+        tap((response) => {
+          // The backend will set the new httpOnly cookies
+          // We just need to update the auto logout timer
+          this.setAutoLogout(15 * 60 * 1000); // 15 minutes (matching backend token expiry)
+        }),
+        catchError((error) => {
+          return throwError(() => error);
         })
       );
   }
 
   getUserId(): string {
     return this.currentUser?._id || '';
-  }
-
-  private setAuthData(response: AuthResponse): void {
-    const { user, accessToken, refreshToken } = response;
-
-    if (user && accessToken) {
-      localStorage.setItem('user', 'aaaa');
-      localStorage.setItem('accessToken', accessToken);
-
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-
-      const expiration = new Date(new Date().getTime() + 3600 * 1000); // 1 hour
-      localStorage.setItem('tokenExpiration', expiration.toISOString());
-
-      this.userSubject.next(user);
-      this.setAutoLogout(3600 * 1000);
-    }
   }
 
   private setAutoLogout(expirationDuration: number): void {
@@ -202,15 +159,74 @@ export class AuthService {
    */
   updateUserData(user: User): void {
     if (isPlatformBrowser(this.platformId)) {
-      const storedUserData = localStorage.getItem('user');
+      const storedUserData = this.cookieService.get('user');
 
       if (storedUserData) {
         const userData = JSON.parse(storedUserData);
         const updatedUserData = { ...userData, ...user };
 
-        localStorage.setItem('user', JSON.stringify(updatedUserData));
+        const expirationDate = new Date();
+        expirationDate.setHours(expirationDate.getHours() + 1); // 1 hour expiration
+
+        this.cookieService.set(
+          'user',
+          JSON.stringify(updatedUserData),
+          expirationDate,
+          '/'
+        );
         this.userSubject.next(updatedUserData);
       }
     }
+  }
+
+  /**
+   * Authenticates a user with email and password
+   * @param email User's email
+   * @param password User's password
+   * @returns Observable of AuthResponse
+   */
+  login(email: string, password: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(
+        `${this.apiUrl}/login`,
+        { email, password },
+        { withCredentials: true }
+      )
+      .pipe(
+        tap((response) => {
+          this.setAuthData(response);
+
+          // // Navigate to the returnUrl or home page after successful login
+          const returnUrl =
+            new URLSearchParams(window.location.search).get('returnUrl') || '/';
+          this.router.navigateByUrl(returnUrl);
+        }),
+        catchError((error) => {
+          console.error('Login error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Registers a new user
+   * @param userData User registration data
+   * @returns Observable of AuthResponse
+   */
+  register(userData: RegisterUser): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/register`, userData, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap((response) => {
+          // The backend sets httpOnly cookies, we only need to store user data
+          this.userSubject.next(response.user);
+          this.setAutoLogout(3600 * 1000); // 1 hour
+        }),
+        catchError((error) => {
+          return throwError(() => error);
+        })
+      );
   }
 }

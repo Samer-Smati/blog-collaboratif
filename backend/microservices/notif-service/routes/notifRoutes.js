@@ -8,7 +8,7 @@ const {
   sendNotification,
   deleteNotification,
 } = require("../controllers/notifController");
-const { auth, authorize } = require("../../../middleware/auth");
+const { auth, requirePermission } = require("../../../middleware/roleBaseAcessCntrol");
 
 // Get user's notifications
 router.get("/", auth, getNotifications);
@@ -23,7 +23,7 @@ router.patch("/:id/read", auth, markAsRead);
 router.patch("/read-all", auth, markAllAsRead);
 
 // Send a notification (admin and editors only)
-router.post("/send", auth, authorize("admin", "editor"), sendNotification);
+router.post("/send", auth, requirePermission("admin", "editor"), sendNotification);
 
 // Delete notification
 router.delete("/:id", auth, deleteNotification);

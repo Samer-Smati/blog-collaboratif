@@ -115,6 +115,7 @@ export class ArticleDetailComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.articleService.getArticleById(articleId).subscribe({
       next: (data) => {
+        console.log('data', data);
         this.article = data;
         this.isLoading = false;
         this.loadComments();
@@ -134,6 +135,7 @@ export class ArticleDetailComponent implements OnInit, OnDestroy {
     if (this.article && this.article._id) {
       this.commentService.getComments(this.article._id).subscribe({
         next: (comments: Comment[]) => {
+          console.log('comments', comments);
           this.comments = comments;
           this.commentsCount = comments.length;
         },

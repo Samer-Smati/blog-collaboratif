@@ -89,10 +89,24 @@ const login = async (req, res) => {
     delete userData.password;
     delete userData.refreshToken;
 
+    // Set cookies
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true, // Force secure in development for testing
+      sameSite: "none", // Changed from 'lax' to 'none' to allow cross-origin requests with credentials
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true, // Force secure in development for testing
+      sameSite: "none", // Changed from 'lax' to 'none' to allow cross-origin requests with credentials
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.json({
       user: userData,
-      accessToken,
-      refreshToken,
+      message: "Login successful",
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -132,7 +146,25 @@ const refreshToken = async (req, res) => {
     user.refreshToken = tokens.refreshToken;
     await user.save();
 
-    res.json(tokens);
+    // Set cookies
+    res.cookie("accessToken", tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true, // Force secure in development for testing
+      sameSite: "none", // Changed from 'lax' to 'none' to allow cross-origin requests with credentials
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true, // Force secure in development for testing
+      sameSite: "none", // Changed from 'lax' to 'none' to allow cross-origin requests with credentials
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    res.json({
+      accessToken: tokens.accessToken,
+      message: "Token refreshed successfully",
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -146,6 +178,18 @@ const logout = async (req, res) => {
       user.refreshToken = null;
       await user.save();
     }
+
+    // Clear cookies with the same options as when they were set
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true,
+      sameSite: "none",
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" || true,
+      sameSite: "none",
+    });
 
     res.json({ message: "Logged out successfully" });
   } catch (error) {

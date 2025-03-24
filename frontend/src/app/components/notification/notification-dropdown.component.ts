@@ -54,7 +54,7 @@ export class NotificationDropdownComponent implements OnInit {
     this.isLoading = true;
     this.notificationService.getNotifications().subscribe({
       next: (data) => {
-        this.notifications = data;
+        this.notifications = data.items;
         this.isLoading = false;
       },
       error: (err) => {

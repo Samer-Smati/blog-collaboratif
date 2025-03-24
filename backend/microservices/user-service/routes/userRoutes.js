@@ -9,9 +9,12 @@ const {
   getAllUsers,
   updateUserRole,
   getUserStats,
+  getUserById,
+  getSafeUserStats,
 } = require("../controllers/userController");
 const { logout } = require("../controllers/authController");
-const { auth, authorize } = require("../../../middleware/auth");
+
+const { requirePermission, auth } = require("../../../middleware/roleBaseAcessCntrol");
 const { authLimiter } = require("../../../middleware/rateLimiter");
 const validate = require("../../../middleware/validate");
 const userSchemas = require("../../../validator/userValidator");
@@ -26,9 +29,13 @@ router.post("/logout", auth, logout);
 router.get("/profile", auth, getProfile);
 router.patch("/profile", auth, validate(userSchemas.updateProfile), updateProfile);
 
-// User management routes (admin only)
-router.get("/", auth, authorize("admin"), getAllUsers);
-router.patch("/:userId/role", auth, authorize("admin"), updateUserRole);
-router.get("/stats", auth, authorize("admin", "editor"), getUserStats);
+// Stats routes - must come BEFORE the dynamic :userId route to avoid conflict
+router.get("/user-stats", auth, requirePermission(["admin", "editor"]), getUserStats);
+router.get("/safe-stats", auth, requirePermission(["admin", "editor"]), getSafeUserStats);
+
+// User management routes with RBAC
+router.get("/", auth, requirePermission(["admin"]), getAllUsers);
+router.get("/:userId", auth, requirePermission(["admin"]), getUserById);
+router.patch("/:userId/role", auth, requirePermission(["admin"]), updateUserRole);
 
 module.exports = router;

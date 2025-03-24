@@ -1,13 +1,34 @@
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
 const connectDB = require("./config/configDb");
-const rateLimit = require("express-rate-limit");
 const socket = require("./config/socket");
+const notificationService = require("./microservices/notif-service/services/notificationService");
+const cookieParser = require("cookie-parser");
 const { apiLimiter, authLimiter } = require("./middleware/rateLimiter");
 const app = express();
+// Set cookie defaults
+const cookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  path: "/",
+  domain: "localhost",
+};
+app.use(
+  cors({
+    origin: "http://localhost:4200",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Set-Cookie"],
+    maxAge: 3600,
+    cookieOptions,
+  })
+);
 
-app.use(cors());
+// Cookie parser middleware
+app.use(cookieParser());
+
 app.use(express.json());
 
 require("dotenv").config();
@@ -17,20 +38,10 @@ connectDB(process.env.MONGO_URI);
 // Rate limiting
 app.use("/api/", apiLimiter);
 
-// Apply stricter rate limiting to auth routes
-app.use("/api/auth/login", authLimiter);
-app.use("/api/auth/register", authLimiter);
-
-// Routes
-
-app.use("/api/users", require("./microservices/user-service/routes/userRoutes"));
-app.use("/api/articles", require("./microservices/article-service/routes/articleRoutes"));
-app.use("/api/comments", require("./microservices/comment-service/routes/commentRoutes"));
-app.use("/api/analytics", require("./microservices/article-service/routes/analyticsRoutes"));
-
 // User Service Routes
 app.use("/api/auth", require("./microservices/user-service/routes/userRoutes"));
 app.use("/api/users", require("./microservices/user-service/routes/userRoutes"));
+app.use("/api/admin", require("./microservices/user-service/routes/adminRoutes"));
 
 // Article Service Routes
 app.use("/api/articles", require("./microservices/article-service/routes/articleRoutes"));
@@ -53,9 +64,8 @@ const server = app
     console.log(err);
   });
 
-// Initialize Socket.io
-socket.init(server);
+// Initialize Socket.IO
+const io = socket.init(server);
 
-// Initialize WebSocket for real-time notifications
-const notificationService = require("./microservices/notif-service/services/notificationService");
-notificationService.initialize(server); // Pass your HTTP server instance
+// Initialize notification service with Socket.IO instance
+notificationService.initialize(io);

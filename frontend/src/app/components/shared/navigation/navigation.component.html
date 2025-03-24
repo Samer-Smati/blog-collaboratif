@@ -40,7 +40,7 @@
             <a class="nav-link" routerLinkActive="active" [routerLink]="['/register']">Register</a>
           </li>
         </ng-container>
-
+        <app-notification-dropdown *ngIf="authService.isAuthenticated()"></app-notification-dropdown>
         <ng-container *ngIf="isAuthenticated">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
@@ -63,5 +63,3 @@
     </div>
   </div>
 </nav>
-
-<app-notification-dropdown *ngIf="authService.isAuthenticated()"></app-notification-dropdown>

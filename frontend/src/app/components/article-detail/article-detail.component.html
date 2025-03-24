@@ -83,15 +83,15 @@
             </div>
 
             <!-- Comments List -->
-            <div *ngIf="article.comments?.length === 0" class="text-center text-muted">
+            <div *ngIf="comments?.length === 0" class="text-center text-muted">
               No comments yet. Be the first to comment!
             </div>
 
-            <div *ngFor="let comment of article.comments" class="comment mb-3">
+            <div *ngFor="let comment of comments" class="comment mb-3">
               <div class="card">
                 <div class="card-body">
                   <div class="comment-content">
-                    <strong>{{ comment.author?.username || 'Unknown' }}</strong>
+                    <strong>{{ comment.userId?.username || 'Unknown' }}</strong>
                     <small class="text-muted ms-2">{{ comment.createdAt | date:'medium' }}</small>
                     <p class="mt-2 mb-1">{{ comment.content }}</p>
                   </div>
@@ -131,7 +131,7 @@
                     <div *ngFor="let reply of comment.replies" class="reply ms-4 mt-2">
                       <div class="card">
                         <div class="card-body py-2">
-                          <strong>{{ reply.author?.username || 'Unknown' }}</strong>
+                          <strong>{{ reply.userId?.username || 'Unknown' }}</strong>
                           <small class="text-muted ms-2">{{ reply.createdAt | date:'medium' }}</small>
                           <p class="mt-1 mb-0">{{ reply.content }}</p>
                         </div>

@@ -10,7 +10,8 @@
   </div>
 
   <!-- Search and Filter component -->
-  <app-article-search (searchResults)="handleSearchResults($event)" (resetSearch)="resetFilter()"></app-article-search>
+  <app-article-search (searchResults)="handleSearchResults($event)" (resetSearch)="resetFilter()"
+    [tags]="tags"></app-article-search>
 
   <!-- Active tag filter indicator -->
   <div *ngIf="selectedTag" class="mb-3">

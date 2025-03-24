@@ -1,64 +1,66 @@
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-10 mx-auto">
-            <div class="card">
-                <div class="card-header">
-                    <h2>{{ isEditing ? 'Edit Article' : 'Create Article' }}</h2>
-                </div>
-                <div class="card-body">
-                    <form [formGroup]="articleForm" (ngSubmit)="onSubmit()">
-                        <div *ngIf="error" class="alert alert-danger">
-                            {{ error }}
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" id="title" class="form-control" formControlName="title"
-                                placeholder="Enter article title"
-                                [ngClass]="{'is-invalid': articleForm.get('title')?.invalid && articleForm.get('title')?.touched}">
-                            <div *ngIf="articleForm.get('title')?.invalid && articleForm.get('title')?.touched"
-                                class="invalid-feedback">
-                                <div *ngIf="articleForm.get('title')?.errors?.['required']">Title is required</div>
-                                <div *ngIf="articleForm.get('title')?.errors?.['minlength']">Title must be at least 5
-                                    characters</div>
-                                <div *ngIf="articleForm.get('title')?.errors?.['maxlength']">Title cannot exceed 100
-                                    characters</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="content" class="form-label">Content</label>
-                            <textarea id="content" class="form-control" formControlName="content" rows="12"
-                                placeholder="Write your article here..."
-                                [ngClass]="{'is-invalid': articleForm.get('content')?.invalid && articleForm.get('content')?.touched}"></textarea>
-                            <div *ngIf="articleForm.get('content')?.invalid && articleForm.get('content')?.touched"
-                                class="invalid-feedback">
-                                <div *ngIf="articleForm.get('content')?.errors?.['required']">Content is required</div>
-                                <div *ngIf="articleForm.get('content')?.errors?.['minlength']">Content must be at least
-                                    20 characters</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="tags" class="form-label">Tags</label>
-                            <input type="text" id="tags" class="form-control" formControlName="tags"
-                                placeholder="Enter tags separated by commas (e.g. technology, programming, web)">
-                            <small class="form-text text-muted">Separate tags with commas</small>
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="button" class="btn btn-secondary me-md-2"
-                                [routerLink]="['/articles']">Cancel</button>
-                            <button type="submit" class="btn btn-primary"
-                                [disabled]="articleForm.invalid || isSubmitting">
-                                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
-                                    aria-hidden="true"></span>
-                                {{ isEditing ? 'Update' : 'Publish' }} Article
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+      <div class="card">
+        <div class="card-header">
+          <h2>{{ isEditing ? 'Edit Article' : 'Create Article' }}</h2>
         </div>
+        <div class="card-body">
+          <form [formGroup]="articleForm" (ngSubmit)="onSubmit()">
+            <div *ngIf="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+
+            <div class="mb-3">
+              <div *ngIf="articleForm.get('status')?.value !== 'published' && this.articleId">
+                <button type="button" class="btn btn-primary" (click)="changeStatus()">Publish</button>
+              </div>
+
+              <label for="title" class="form-label">Title</label>
+              <input type="text" id="title" class="form-control" formControlName="title"
+                placeholder="Enter article title"
+                [ngClass]="{'is-invalid': articleForm.get('title')?.invalid && articleForm.get('title')?.touched}">
+              <div *ngIf="articleForm.get('title')?.invalid && articleForm.get('title')?.touched"
+                class="invalid-feedback">
+                <div *ngIf="articleForm.get('title')?.errors?.['required']">Title is required</div>
+                <div *ngIf="articleForm.get('title')?.errors?.['minlength']">Title must be at least 5
+                  characters</div>
+                <div *ngIf="articleForm.get('title')?.errors?.['maxlength']">Title cannot exceed 100
+                  characters</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="content" class="form-label">Content</label>
+              <textarea id="content" class="form-control" formControlName="content" rows="12"
+                placeholder="Write your article here..."
+                [ngClass]="{'is-invalid': articleForm.get('content')?.invalid && articleForm.get('content')?.touched}"></textarea>
+              <div *ngIf="articleForm.get('content')?.invalid && articleForm.get('content')?.touched"
+                class="invalid-feedback">
+                <div *ngIf="articleForm.get('content')?.errors?.['required']">Content is required</div>
+                <div *ngIf="articleForm.get('content')?.errors?.['minlength']">Content must be at least
+                  20 characters</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="tags" class="form-label">Tags</label>
+              <input type="text" id="tags" class="form-control" formControlName="tags"
+                placeholder="Enter tags separated by commas (e.g. technology, programming, web)">
+              <small class="form-text text-muted">Separate tags with commas</small>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="button" class="btn btn-secondary me-md-2" [routerLink]="['/articles']">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="articleForm.invalid || isSubmitting">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
+                  aria-hidden="true"></span>
+                {{ isEditing ? 'Update' : 'Publish' }} Article
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </div>

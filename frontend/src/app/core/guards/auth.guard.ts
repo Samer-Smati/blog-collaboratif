@@ -30,7 +30,7 @@ export const authGuard: CanActivateFn = (
     return true;
   } else {
     // User is not authenticated, redirect to login
-    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+    router.navigate(['/login']);
     return false;
   }
 };

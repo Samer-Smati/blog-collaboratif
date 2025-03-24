@@ -9,7 +9,7 @@ const {
   createReply,
   getReplies,
 } = require("../controllers/commentController");
-const { auth, authorize } = require("../../../middleware/auth");
+const { auth } = require("../../../middleware/roleBaseAcessCntrol");
 const { apiLimiter } = require("../../../middleware/rateLimiter");
 
 // Create comment (authenticated users)
@@ -17,6 +17,9 @@ router.post("/", auth, createComment);
 
 // Get comments for an article
 router.get("/", apiLimiter, getComments);
+
+// Get comments by article ID (this matches the frontend expectation)
+router.get("/article/:articleId", apiLimiter, getComments);
 
 // Get specific comment
 router.get("/:id", apiLimiter, getCommentById);
@@ -28,9 +31,9 @@ router.put("/:id", auth, updateComment);
 router.delete("/:id", auth, deleteComment);
 
 // Create reply to comment
-router.post("/reply", auth, createReply);
+router.post("/:id/reply", auth, createReply);
 
 // Get replies for a comment
-router.get("/replies", apiLimiter, getReplies);
+router.get("/:id/replies", apiLimiter, getReplies);
 
 module.exports = router;

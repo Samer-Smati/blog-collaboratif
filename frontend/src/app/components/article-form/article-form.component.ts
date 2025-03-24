@@ -54,7 +54,21 @@ export class ArticleFormComponent implements OnInit {
       this.loadArticle(this.articleId);
     }
   }
-
+  changeStatus(): void {
+    if (!this.articleId) {
+      this.error = 'Article ID is missing';
+      return;
+    }
+    this.articleService.changeStatus(this.articleId, 'published').subscribe({
+      next: () => {
+        this.router.navigate(['/articles']);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Failed to change status';
+        console.error(err);
+      },
+    });
+  }
   loadArticle(id: string): void {
     this.articleService.getArticleById(id).subscribe({
       next: (article) => {

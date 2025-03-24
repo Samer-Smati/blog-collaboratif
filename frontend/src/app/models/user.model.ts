@@ -1,3 +1,6 @@
+import { Article } from './article.model';
+import { Comment } from './comment.model';
+
 export interface User {
   _id: string;
   username: string;
@@ -9,6 +12,12 @@ export interface User {
   updatedAt: string;
   articleCount?: number;
   commentCount?: number;
+  accessToken?: string;
+  location?: string;
+  followers?: number;
+  following?: number;
+  articles?: Article[] | [];
+  comments?: Comment[] | [];
 }
 
 export interface AuthResponse {

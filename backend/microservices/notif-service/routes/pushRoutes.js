@@ -6,7 +6,7 @@ const {
   unsubscribe,
   testPush,
 } = require("../controllers/pushController");
-const { auth } = require("../../../middleware/auth");
+const { auth } = require("../../../middleware/roleBaseAcessCntrol");
 
 // Get VAPID public key
 router.get("/vapid-public-key", getVapidPublicKey);

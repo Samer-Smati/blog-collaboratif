@@ -17,6 +17,7 @@ import { ArticleSearchComponent } from '../article-search/article-search.compone
 export class ArticleListComponent implements OnInit {
   articles: Article[] = [];
   filteredArticles: Article[] = [];
+  tags: any[] = [];
   isLoading = true;
   error = '';
   currentPage = 1;
@@ -53,6 +54,9 @@ export class ArticleListComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.articles = data.items;
+          this.tags = [
+            ...new Set(this.articles.flatMap((article) => article.tags || [])),
+          ];
           this.filteredArticles = [...this.articles];
           this.totalArticles = data.total;
           this.totalPages = Math.ceil(this.totalArticles / this.pageSize);

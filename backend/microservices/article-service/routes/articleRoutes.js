@@ -8,33 +8,42 @@ const {
   deleteArticle,
   commentArticle,
   replyArticle,
+  searchArticles,
   fakeData,
+  changeStatus,
+  getAllTags,
 } = require("../controllers/articleController");
-const { auth, authorize } = require("../../../middleware/auth");
-const { apiLimiter } = require("../../../middleware/rateLimiter");
+const { auth, requirePermission } = require("../../../middleware/roleBaseAcessCntrol");
 
 // Get all articles (public)
-router.get("/", apiLimiter, getArticles);
+router.get("/", auth, requirePermission(["admin", "editor", "writer"]), getArticles);
+
+// Search articles (public)
+router.get("/search", auth, requirePermission(["admin", "editor", "writer"]), searchArticles);
+
+// Get all tags - new endpoint that avoids ObjectId errors
+router.get("/all-tags", getAllTags);
 
 // Get article by ID (public)
-router.get("/:id", apiLimiter, getArticleById);
+router.get("/:id", auth, requirePermission(["admin", "editor", "writer"]), getArticleById);
 
 // Create article (admin, editor, writer)
-router.post("/", auth, authorize("admin", "editor", "writer"), createArticle);
+router.post("/", auth, requirePermission(["admin", "editor", "writer"]), createArticle);
 
 // Update article (admin, editor, writer - with restrictions)
-router.put("/:id", auth, authorize("admin", "editor", "writer"), updateArticle);
+router.put("/:id", auth, requirePermission(["admin", "editor", "writer"]), updateArticle);
 
 // Delete article (admin only)
-router.delete("/:id", auth, authorize("admin"), deleteArticle);
+router.delete("/:id", auth, requirePermission(["admin"]), deleteArticle);
 
 // Comment on article (any authenticated user)
-router.post("/:id/comment", auth, commentArticle);
+router.post("/:id/comment", auth, requirePermission(["admin", "editor", "writer"]), commentArticle);
 
 // Reply to comment (any authenticated user)
-router.post("/:id/reply", auth, replyArticle);
+router.post("/:id/reply", auth, requirePermission(["admin", "editor", "writer"]), replyArticle);
 
+router.get("/changeStatus/:id", auth, changeStatus);
 // Generate fake data (admin only, development environment)
-router.post("/fake", auth, authorize("admin"), fakeData);
+router.post("/fake", fakeData);
 
 module.exports = router;

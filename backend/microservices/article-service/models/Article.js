@@ -7,8 +7,11 @@ const articleSchema = new mongoose.Schema(
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     tags: [{ type: String }],
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
-
-    isDeleted: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived", "deleted"],
+      default: "published",
+    },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true }

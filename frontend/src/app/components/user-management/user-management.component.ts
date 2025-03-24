@@ -28,8 +28,19 @@ export class UserManagementComponent implements OnInit {
   loadUsers(): void {
     this.isLoading = true;
     this.userService.getAllUsers().subscribe({
-      next: (users) => {
-        this.users = users;
+      next: (response) => {
+        // Make sure users is always an array
+        if (response && response.items && Array.isArray(response.items)) {
+          this.users = response.items;
+        } else if (response && Array.isArray(response)) {
+          this.users = response;
+        } else if (response && typeof response === 'object') {
+          // If response is an object but not an array, convert it to an array
+          this.users = Object.values(response);
+        } else {
+          this.users = [];
+          this.error = 'Invalid users data format received';
+        }
         this.isLoading = false;
       },
       error: (err) => {

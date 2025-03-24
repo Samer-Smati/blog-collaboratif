@@ -1,28 +1,21 @@
-const WebSocket = require("ws");
+const socketIO = require("socket.io");
 const jwt = require("jsonwebtoken");
-const url = require("url");
 
 class NotificationService {
   constructor() {
     this.connections = new Map();
   }
 
-  initialize(server) {
-    const wss = new WebSocket.Server({
-      server,
-      verifyClient: this.verifyClient,
-    });
+  initialize(io) {
+    console.log("Socket.IO server initialized for notifications");
 
-    console.log("WebSocket server initialized for notifications");
-
-    wss.on("connection", (ws, req) => {
+    io.on("connection", (socket) => {
       try {
         // Extract token from query string
-        const params = url.parse(req.url, true).query;
-        const token = params.token;
+        const token = socket.handshake.query.token;
 
         if (!token) {
-          ws.close(4001, "Authentication token required");
+          socket.disconnect();
           return;
         }
 
@@ -30,44 +23,35 @@ class NotificationService {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decoded.id;
 
-        console.log(`WebSocket connection established for user ${userId}`);
+        console.log(`Socket.IO connection established for user ${userId}`);
 
         // Store connection by user ID
-        this.connections.set(userId, ws);
+        this.connections.set(userId, socket);
 
         // Handle disconnection
-        ws.on("close", () => {
-          console.log(`WebSocket connection closed for user ${userId}`);
+        socket.on("disconnect", () => {
+          console.log(`Socket.IO connection closed for user ${userId}`);
           this.connections.delete(userId);
         });
 
         // Send confirmation to client
-        ws.send(
-          JSON.stringify({ type: "connected", message: "Connected to notification service" })
-        );
+        socket.emit("connected", { message: "Connected to notification service" });
       } catch (error) {
-        console.error("WebSocket connection error:", error);
-        ws.close(4002, "Authentication failed");
+        console.error("Socket.IO connection error:", error);
+        socket.disconnect();
       }
     });
   }
 
-  verifyClient(info, callback) {
-    // Optionally implement additional verification
-    callback(true);
-  }
-
   notifyUser(userId, notification) {
-    const connection = this.connections.get(userId);
+    const socket = this.connections.get(userId);
 
-    if (connection && connection.readyState === WebSocket.OPEN) {
+    if (socket && socket.connected) {
       try {
-        connection.send(
-          JSON.stringify({
-            type: "notification",
-            data: notification,
-          })
-        );
+        socket.emit("notification", {
+          type: "notification",
+          data: notification,
+        });
         console.log(`Notification sent to user ${userId}`);
         return true;
       } catch (error) {
@@ -75,7 +59,7 @@ class NotificationService {
         return false;
       }
     } else {
-      console.log(`User ${userId} is not connected via WebSocket`);
+      console.log(`User ${userId} is not connected via Socket.IO`);
       return false;
     }
   }

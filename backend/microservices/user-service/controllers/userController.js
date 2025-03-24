@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Article = require("../../article-service/models/Article");
+const Comment = require("../../comment-service/models/Comment");
 
 const register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -30,6 +31,7 @@ const login = async (req, res) => {
     const user = await User.findOne({
       $or: [{ email }, { username: { $regex: new RegExp(`^${username}$`, "i") } }],
     });
+
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -39,10 +41,49 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    // Generate token with user ID and role
+    const accessToken = jwt.sign(
+      {
+        id: user._id,
+        role: user.role, // Include the role in the token
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.status(200).json({ user, token });
+    // Set cookies with proper options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    };
+
+    // Set access token cookie
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 3600000, // 1 hour
+    });
+
+    // Set refresh token cookie
+    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    res.cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Send response without sensitive data
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
+
+    res.status(200).json({
+      user: userWithoutPassword,
+      accessToken,
+      refreshToken,
+      expiresIn: 3600, // 1 hour in seconds
+    });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Login failed" });
   }
 };
@@ -155,7 +196,20 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const articles = await Article.find({ author: userId });
+    const comments = await Comment.find({ userId: userId });
+    const user = await User.findById(userId).select("-password -refreshToken");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ user, articles, comments });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 const updateUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -187,11 +241,17 @@ const updateUserRole = async (req, res) => {
 
 const getUserStats = async (req, res) => {
   try {
+    // Check if req.user exists
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
     // Only admins and editors can view stats
-    if (!["admin", "editor"].includes(req.user.role)) {
+    if (req.user && req.user.role && !["admin", "editor"].includes(req.user.role)) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    // Count users by role
     const stats = await User.aggregate([
       {
         $group: {
@@ -201,7 +261,7 @@ const getUserStats = async (req, res) => {
       },
     ]);
 
-    // Get article count by role
+    // Safer approach to getting article counts by role - handle potential ObjectId issues
     const articlesByRole = await Article.aggregate([
       {
         $lookup: {
@@ -211,6 +271,8 @@ const getUserStats = async (req, res) => {
           as: "authorInfo",
         },
       },
+      // Only include documents where the authorInfo was successfully joined
+      { $match: { "authorInfo.0": { $exists: true } } },
       { $unwind: "$authorInfo" },
       {
         $group: {
@@ -220,11 +282,93 @@ const getUserStats = async (req, res) => {
       },
     ]);
 
+    // Get recent user registrations
+    const recentRegistrations = await User.find()
+      .select("-password -refreshToken")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    // Format the response
+    const roleStats = {};
+    stats.forEach((stat) => {
+      if (stat._id) {
+        // Ensure _id exists
+        roleStats[stat._id] = {
+          users: stat.count,
+          articles: 0,
+        };
+      }
+    });
+
+    articlesByRole.forEach((stat) => {
+      if (stat._id && roleStats[stat._id]) {
+        roleStats[stat._id].articles = stat.count;
+      }
+    });
+
     res.json({
+      roles: roleStats,
+      recentRegistrations,
+      totalUsers: stats.reduce((sum, stat) => sum + stat.count, 0),
       usersByRole: stats,
       articlesByRole,
     });
   } catch (error) {
+    console.error("Error getting user stats:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Safe version of user stats that avoids ObjectId casting errors
+const getSafeUserStats = async (req, res) => {
+  try {
+    // Check permissions - same as getUserStats
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    if (req.user && req.user.role && !["admin", "editor"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Direct database queries to avoid aggregation pipeline issues
+    const totalUsers = await User.countDocuments({});
+
+    // Count by role using simple queries instead of aggregation
+    const adminCount = await User.countDocuments({ role: "admin" });
+    const editorCount = await User.countDocuments({ role: "editor" });
+    const writerCount = await User.countDocuments({ role: "writer" });
+    const readerCount = await User.countDocuments({ role: "reader" });
+
+    // Format response
+    const roleStats = {
+      admin: { users: adminCount, articles: 0 },
+      editor: { users: editorCount, articles: 0 },
+      writer: { users: writerCount, articles: 0 },
+      reader: { users: readerCount, articles: 0 },
+    };
+
+    const usersByRole = [
+      { _id: "admin", count: adminCount },
+      { _id: "editor", count: editorCount },
+      { _id: "writer", count: writerCount },
+      { _id: "reader", count: readerCount },
+    ];
+
+    // Get recent registrations
+    const recentRegistrations = await User.find()
+      .select("-password -refreshToken")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      roles: roleStats,
+      recentRegistrations,
+      totalUsers,
+      usersByRole,
+    });
+  } catch (error) {
+    console.error("Error getting safe user stats:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -238,4 +382,6 @@ module.exports = {
   getAllUsers,
   updateUserRole,
   getUserStats,
+  getUserById,
+  getSafeUserStats,
 };

@@ -7,7 +7,7 @@ export interface Notification {
   _id: string;
   recipient: string;
   type: 'comment' | 'reply' | 'mention' | 'like' | 'system';
-  message: string;
+  body: string;
   relatedItemId?: string;
   read: boolean;
   createdAt: string;
@@ -26,12 +26,12 @@ export class NotificationService {
     this.getUnreadCount().subscribe();
   }
 
-  getNotifications(limit: number = 10): Observable<Notification[]> {
-    return this.http.get<Notification[]>(`${this.apiUrl}?limit=${limit}`);
+  getNotifications(limit: number = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}?limit=${limit}`);
   }
 
   getUnreadCount(): Observable<number> {
-    return this.http.get<{ count: number }>(`${this.apiUrl}/unread-count`).pipe(
+    return this.http.get<{ count: number }>(`${this.apiUrl}/unread/count`).pipe(
       map((response) => response.count),
       tap((count) => {
         this.unreadCount.next(count);

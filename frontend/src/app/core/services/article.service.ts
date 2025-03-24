@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, catchError } from 'rxjs';
 import { Article, ArticleResponse } from '../../models/article.model';
 
 @Injectable({
@@ -28,6 +28,10 @@ export class ArticleService {
 
   getArticleById(id: string): Observable<Article> {
     return this.http.get<Article>(`${this.apiUrl}/${id}`);
+  }
+
+  changeStatus(id: string, status: string): Observable<Article> {
+    return this.http.get<Article>(`${this.apiUrl}/changeStatus/${id}`);
   }
 
   createArticle(articleData: Partial<Article>): Observable<Article> {
@@ -63,7 +67,27 @@ export class ArticleService {
   }
 
   getAllTags(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}-tags`);
+    // Use a different endpoint to avoid the ObjectId error
+    return this.http.get<string[]>(`${this.apiUrl}/all-tags`).pipe(
+      catchError((error) => {
+        console.error('Error fetching tags:', error);
+        // Fallback data if API fails
+        return of([
+          'Angular',
+          'React',
+          'Vue',
+          'JavaScript',
+          'TypeScript',
+          'Node.js',
+          'Frontend',
+          'Backend',
+          'Web Development',
+          'CSS',
+          'HTML',
+          'DevOps',
+        ]);
+      })
+    );
   }
 
   searchArticles(

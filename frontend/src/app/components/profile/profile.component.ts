@@ -61,11 +61,20 @@ export class ProfileComponent implements OnInit {
 
     if (userId) {
       this.userService.getUserById(userId).subscribe({
-        next: (user) => {
-          this.user = user;
+        next: (user: any) => {
+          let userData: User = user?.user;
+          this.user = userData;
           this.profileForm.patchValue({
-            username: user.username,
-            email: user.email,
+            username: userData.username,
+            email: userData.email,
+            bio: userData.bio,
+            location: userData.location,
+            role: userData.role,
+            createdAt: userData.createdAt,
+            updatedAt: userData.updatedAt,
+            articleCount: userData.articles?.length || 0,
+            commentCount: userData.comments?.length || 0,
+            followers: userData.followers || 0,
           });
           this.isLoading = false;
         },

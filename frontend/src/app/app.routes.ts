@@ -10,6 +10,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { UserManagementComponent } from './components/user-management/user-management.component';
 import { NotFoundComponent } from './components/shared/not-found/not-found.component';
+import { ChartTestComponent } from './components/chart-test/chart-test.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/articles', pathMatch: 'full' },
@@ -20,20 +21,24 @@ export const routes: Routes = [
     path: 'articles/create',
     component: ArticleFormComponent,
     canActivate: [authGuard],
-    data: { roles: ['admin', 'editor', 'writer'] },
+    // data: { roles: ['admin', 'editor', 'writer'] },
   },
   { path: 'articles/:id', component: ArticleDetailComponent },
   {
     path: 'articles/:id/edit',
     component: ArticleFormComponent,
     canActivate: [authGuard],
-    data: { roles: ['admin', 'editor', 'writer'] },
+    // data: { roles: ['admin', 'editor', 'writer'] },
   },
   {
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['admin', 'editor'] },
+    // data: { roles: ['admin', 'editor'] },
+  },
+  {
+    path: 'chart-test',
+    component: ChartTestComponent,
   },
   {
     path: 'profile',
@@ -44,7 +49,7 @@ export const routes: Routes = [
     path: 'users',
     component: UserManagementComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['admin'] },
+    // data: { roles: ['admin'] },
   },
   { path: '**', component: NotFoundComponent },
 ];

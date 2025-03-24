@@ -2,7 +2,7 @@ export interface Comment {
   _id: string;
   articleId: string;
   content: string;
-  author: {
+  userId: {
     _id: string;
     username: string;
     avatar?: string;
@@ -17,7 +17,7 @@ export interface Comment {
 export interface Reply {
   _id: string;
   content: string;
-  author: {
+  userId: {
     _id: string;
     username: string;
     avatar?: string;

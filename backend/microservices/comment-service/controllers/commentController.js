@@ -44,7 +44,9 @@ const createComment = async (req, res) => {
 
 const getComments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, articleId } = req.query;
+    const { page = 1, limit = 10 } = req.query;
+    // Get articleId from either route params or query params
+    const articleId = req.params.articleId || req.query.articleId;
     const skip = (page - 1) * limit;
 
     if (!articleId) {
@@ -69,6 +71,12 @@ const getComments = async (req, res) => {
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
 
+    // If we're just getting the comments without pagination info
+    if (req.params.articleId) {
+      return res.json(comments);
+    }
+
+    // Return with pagination info for the main comment listing
     res.json({
       items: comments,
       totalItems,
@@ -160,7 +168,8 @@ const deleteComment = async (req, res) => {
 
 const createReply = async (req, res) => {
   try {
-    const { content, parentId, articleId } = req.body;
+    const { content, articleId } = req.body;
+    const parentId = req.params.id; // Get parent comment ID from URL params
 
     if (!content || !parentId || !articleId) {
       return res
@@ -205,7 +214,8 @@ const createReply = async (req, res) => {
 
 const getReplies = async (req, res) => {
   try {
-    const { parentId, page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
+    const parentId = req.params.id; // Get parent comment ID from URL params
     const skip = (page - 1) * limit;
 
     if (!parentId) {
