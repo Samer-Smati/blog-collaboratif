@@ -15,7 +15,7 @@ export interface Article {
 
 export interface ArticleResponse {
   items: Article[];
-  total: number;
-  page: number;
-  pages: number;
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
 }

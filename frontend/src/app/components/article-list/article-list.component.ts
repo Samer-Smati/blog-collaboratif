@@ -54,11 +54,12 @@ export class ArticleListComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.articles = data.items;
+          this.currentPage = data.currentPage;
           this.tags = [
             ...new Set(this.articles.flatMap((article) => article.tags || [])),
           ];
           this.filteredArticles = [...this.articles];
-          this.totalArticles = data.total;
+          this.totalArticles = data.totalItems;
           this.totalPages = Math.ceil(this.totalArticles / this.pageSize);
           this.isLoading = false;
         },

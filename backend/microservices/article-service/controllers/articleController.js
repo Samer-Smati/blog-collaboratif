@@ -20,23 +20,22 @@ const createArticle = async (req, res) => {
       content,
       author: req.user.id,
       tags: tags || [],
-      status: "published",
+      status: "draft",
     });
 
     // Notify editors about new article
-    if (status === "published") {
-      // Find admin and editor users
-      const editors = await User.find({ role: { $in: ["admin", "editor"] } });
 
-      // Send notifications to editors
-      for (const editor of editors) {
-        await createNotification(
-          editor._id,
-          `New article "${title}" has been published`,
-          "info",
-          `/articles/${article._id}`
-        );
-      }
+    // Find admin and editor users
+    const editors = await User.find({ role: { $in: ["admin", "editor"] } });
+
+    // Send notifications to editors
+    for (const editor of editors) {
+      await createNotification(
+        editor._id,
+        `New article "${title}" has been published`,
+        "info",
+        `/articles/${article._id}`
+      );
     }
 
     res.status(201).json(article);
