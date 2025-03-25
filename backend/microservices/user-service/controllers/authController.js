@@ -17,12 +17,10 @@ const generateTokens = (user) => {
 
 const register = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
@@ -73,6 +71,14 @@ const login = async (req, res) => {
 
     // Check password
     const isPasswordValid = await user.comparePassword(password);
+    console.log(
+      "password",
+      password,
+      "user.password",
+      user.password,
+      "isPasswordValid",
+      isPasswordValid
+    );
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid password" });
     }

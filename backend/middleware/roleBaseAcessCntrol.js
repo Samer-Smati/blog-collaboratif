@@ -12,7 +12,7 @@ const rolePermissions = {
   editor: ["read", "write", "update", "view_stats"],
   writer: ["read", "write"],
   reader: ["read"],
-};
+}; 
 
 const auth = async (req, res, next) => {
   try {

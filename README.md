@@ -311,3 +311,10 @@ Or:
 ```
 npm install --force
 ```
+
+#Admin connection
+
+```
+email : samersmati@gmail.com
+password : Azerty123
+```

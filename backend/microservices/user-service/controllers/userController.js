@@ -13,8 +13,7 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, password: hashedPassword });
+    const user = await User.create({ username, email, password });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
@@ -25,18 +24,17 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password, username } = req.body;
+  const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({
-      $or: [{ email }, { username: { $regex: new RegExp(`^${username}$`, "i") } }],
-    });
-
+    const user = await User.findOne({ email });
+    console.log("user", user);
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
