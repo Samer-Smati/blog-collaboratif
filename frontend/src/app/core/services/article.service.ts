@@ -68,26 +68,7 @@ export class ArticleService {
 
   getAllTags(): Observable<string[]> {
     // Use a different endpoint to avoid the ObjectId error
-    return this.http.get<string[]>(`${this.apiUrl}/all-tags`).pipe(
-      catchError((error) => {
-        console.error('Error fetching tags:', error);
-        // Fallback data if API fails
-        return of([
-          'Angular',
-          'React',
-          'Vue',
-          'JavaScript',
-          'TypeScript',
-          'Node.js',
-          'Frontend',
-          'Backend',
-          'Web Development',
-          'CSS',
-          'HTML',
-          'DevOps',
-        ]);
-      })
-    );
+    return this.http.get<string[]>(`${this.apiUrl}/all-tags`);
   }
 
   searchArticles(

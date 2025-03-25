@@ -341,11 +341,11 @@ const searchArticles = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Build query
-    const query = { isDeleted: false };
+    const query = { status: "published" };
 
     // Only show published articles unless admin/editor
     if (!["admin", "editor"].includes(req.user?.role)) {
-      query.isPublished = true;
+      query.status = "published";
     }
 
     // Search by title or content
