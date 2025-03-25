@@ -141,10 +141,10 @@ const getArticleById = async (req, res) => {
 const updateArticle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, tags, isPublished, status } = req.body;
+    const { title, content, tags, status } = req.body;
 
     // Find the article
-    const article = await Article.findOne({ _id: id, isDeleted: false });
+    const article = await Article.findOne({ _id: id });
 
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
@@ -172,13 +172,8 @@ const updateArticle = async (req, res) => {
     if (tags) updates.tags = tags;
 
     // Only admin and editor can change publish status
-    if ((isAdmin || isEditor) && typeof isPublished === "boolean") {
-      updates.isPublished = isPublished;
-    }
-
-    // Set status based on isPublished if provided
-    if (typeof isPublished === "boolean") {
-      updates.status = isPublished ? "published" : "draft";
+    if ((isAdmin || isEditor) && status) {
+      updates.status = status;
     }
 
     // Override status if explicitly provided (admin/editor only)
