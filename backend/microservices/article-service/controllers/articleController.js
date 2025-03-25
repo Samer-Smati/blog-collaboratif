@@ -132,14 +132,6 @@ const getArticleById = async (req, res) => {
       return res.status(404).json({ message: "Article not found" });
     }
 
-    // Check if article is unpublished and user is not admin/editor or the author
-    if (
-      !["admin", "editor"].includes(req.user?.role) &&
-      article.author._id.toString() !== req.user?.id
-    ) {
-      return res.status(403).json({ message: "Not authorized to view this article" });
-    }
-
     res.status(200).json(article);
   } catch (error) {
     res.status(500).json({ message: error.message });

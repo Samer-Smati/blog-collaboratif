@@ -16,19 +16,19 @@ const {
 const { auth, requirePermission } = require("../../../middleware/roleBaseAcessCntrol");
 
 // Get all articles (public)
-router.get("/", auth, requirePermission(["admin", "editor", "writer"]), getArticles);
+router.get("/", auth, getArticles);
 
 // Search articles (public)
-router.get("/search", auth, requirePermission(["admin", "editor", "writer"]), searchArticles);
+router.get("/search", auth, searchArticles);
 
 // Get all tags - new endpoint that avoids ObjectId errors
 router.get("/all-tags", getAllTags);
 
 // Get article by ID (public)
-router.get("/:id", auth, requirePermission(["admin", "editor", "writer"]), getArticleById);
+router.get("/:id", auth, getArticleById);
 
 // Create article (admin, editor, writer)
-router.post("/", auth, requirePermission(["admin", "editor", "writer"]), createArticle);
+router.post("/", auth, createArticle);
 
 // Update article (admin, editor, writer - with restrictions)
 router.put("/:id", auth, requirePermission(["admin", "editor", "writer"]), updateArticle);

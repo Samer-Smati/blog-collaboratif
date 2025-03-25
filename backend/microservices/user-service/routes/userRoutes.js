@@ -35,7 +35,7 @@ router.get("/safe-stats", auth, requirePermission(["admin", "editor"]), getSafeU
 
 // User management routes with RBAC
 router.get("/", auth, requirePermission(["admin"]), getAllUsers);
-router.get("/:userId", auth, requirePermission(["admin"]), getUserById);
+router.get("/:userId", auth, getUserById);
 router.patch("/:userId/role", auth, requirePermission(["admin"]), updateUserRole);
 
 module.exports = router;
