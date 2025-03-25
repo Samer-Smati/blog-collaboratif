@@ -250,3 +250,64 @@ frontend/
 ├── angular.json                # Angular CLI configuration
 └── package.json                # Project dependencies
 ```
+
+## API Documentation
+
+The API documentation is available at http://localhost:3000/api-docs when running the backend server in development mode.
+
+### Key Endpoints
+
+- **User Management**:
+
+  - `POST /api/users/register`: Register new user
+  - `POST /api/users/login`: Authenticate user
+  - `GET /api/users/profile`: Get user profile
+
+- **Article Management**:
+
+  - `GET /api/articles`: List articles
+  - `POST /api/articles`: Create article
+  - `GET /api/articles/:id`: Get article by ID
+  - `PUT /api/articles/:id`: Update article
+  - `DELETE /api/articles/:id`: Delete article
+
+- **Comments**:
+
+  - `GET /api/comments/article/:articleId`: Get comments for article
+  - `POST /api/comments`: Create comment
+  - `POST /api/comments/:id/replies`: Reply to comment
+
+- **Analytics**:
+  - `GET /api/analytics/articles/stats`: Get article statistics
+  - `GET /api/analytics/articles/popular`: Get popular articles
+
+## Role-Based Access
+
+The platform implements four primary user roles:
+
+- **Admin**: Full system access
+- **Editor**: Article management and moderation
+- **Writer**: Content creation and editing
+- **Reader**: View and comment on content
+
+## Troubleshooting
+
+### Common Issues
+
+- **MongoDB Connection**: Ensure MongoDB is running on the specified port
+- **JWT Authentication**: Check that your JWT_SECRET is correctly set in the .env file
+- **CORS Issues**: If experiencing cross-origin problems, verify the CORS settings in server.js
+
+### Dependency Conflicts
+
+If you encounter package compatibility issues during installation, try:
+
+```
+npm install --legacy-peer-deps
+```
+
+Or:
+
+```
+npm install --force
+```
